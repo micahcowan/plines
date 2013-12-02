@@ -8,7 +8,7 @@ import OptParse
 
 data OptAction =
     DefaultAction
-    | HelpAction
+    | UsageAction
     | VersionAction
     | EvalAction String
     | ReadDefsAction String
@@ -21,7 +21,7 @@ data OptAction =
 data OptBuiltin = OptBuiltin {
         shortOpts :: String
       , longOpts  :: [String]
-      , action    :: OptAction
+      , action    :: String -> OptAction
       , tag       :: String
       , desc      :: [String]
     }
@@ -31,27 +31,34 @@ data OptBuiltin = OptBuiltin {
 ---
 
     -h, --help
+        :const UsageAction
         Print this help text and exit.
 
     -V, --version
+        :const VersionAction
         Print version and exit.
 
     --eval EXPR
+        :EvalAction
         Evaluate EXPR
 
     --read-defs FILE
+        :ReadDefsAction
         Read plines definitions from the specified file.
         If FILE refers to a directory, then all files in that directory
         are read.
 
     --read-opts FILE
+        :ReadOptsAction
         Read option definitions from the specified file.
         If FILE refers to a directory, then all files in that directory
         are read.
 
     --expand NAME
+        :ExpandAction . (: [])
         Expand the requested pline or chain, and then exit.
 
     --show NAME
+        :ShowAction . (: [])
         Give the detailed composition of the requested pline or chain,
         and then exit.

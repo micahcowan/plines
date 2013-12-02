@@ -10,9 +10,10 @@
 use strict;
 use warnings;
 
-use constant STATE_INIT => 0;
-use constant STATE_DESC => 1;
-use constant STATE_PREAMBLE => 2;
+use constant STATE_PREAMBLE => 0;
+use constant STATE_INIT => 1;
+use constant STATE_ACT  => 2;
+use constant STATE_DESC => 3;
 
 {
     my $d = {
@@ -56,6 +57,10 @@ use constant STATE_PREAMBLE => 2;
             next if $line =~ /^\s*(?:#.*)?$/;
 
             &parse_opt_line($d, $line);
+            $state = STATE_ACT;
+        }
+        elsif ($state == STATE_ACT) {
+            &parse_opt_act($d, $line);
             $state = STATE_DESC;
         }
     }
@@ -141,6 +146,38 @@ sub register_opts {
     }
 }
 
+sub parse_opt_act {
+    my ($d, $line) = @_;
+    my $indent = $d->{'indent'};
+    my $subindent = $d->{'subindent'};
+    my $infname = $d->{'infname'};
+
+    chomp $line;
+    my ($spc, $act) = $line =~ /
+        ^
+        (\s*)   # Leading space (should start with previous indent)
+        :       # Colon
+        (.*)    # Everything after that is the function result of a lookup
+                #   on this option.
+    /x;
+
+
+    if (not (defined $spc) && (defined $act)) {
+        die "Didn't find action line at $infname line $.";
+    }
+    elsif (! exists $d->{'subindent'}) {
+        # subindent should be space atop existing indent.
+        my $indent = $d->{'indent'};
+        if ($spc !~ /^$indent\s/) {
+            die "Sub-indent doesn't build on previous indentation at"
+                . " $infname line $.";
+        }
+        $d->{'subindent'} = $spc;
+    }
+
+    $d->{'curopt'}{'act'} = $act;
+}
+
 sub parse_opt_desc {
     my ($d, $line) = @_;
     my $indent = $d->{'indent'};
@@ -157,18 +194,7 @@ sub parse_opt_desc {
     }
     else {
 
-        my ($spc) = $line =~ /^(\s*)/;
-
-        if (! exists $d->{'subindent'}) {
-            # subindent should be space atop existing indent.
-            my $indent = $d->{'indent'};
-            if ($spc !~ /^$indent\s/) {
-                die "Sub-indent doesn't build on previous indentation at"
-                    . " $infname line $.";
-            }
-            $d->{'subindent'} = $spc;
-        }
-        elsif ($line =~ s/^$subindent//) {
+        if ($line =~ s/^$subindent//) {
             # A real text line, possibly following a number of blanks.
             my @blanks = exists $d->{'curopt'}{'blanks'} ?
                 ('') x $d->{'curopt'}{'blanks'} :
@@ -210,12 +236,6 @@ sub hstrl {
     return $retval;
 }
 
-sub make_action {
-    my $act = shift;
-    $act =~ s/(?:^|-)([[:lower:]])/ uc $1 /eg;
-    $act .= 'Action {}';
-}
-
 sub finish_opt {
     my $d = shift;
     my $c = $d->{'curopt'};
@@ -226,7 +246,7 @@ sub finish_opt {
     }
     my $shopts = $c->{'shopts'};
     my $lopts = &hstrl($c->{'lopts'});
-    my $act = &make_action($c->{'lopts'}[0]);
+    my $act = '(' . $c->{'act'} . ')';
     my $tag = &hstring($c->{'tag'});
     my $description = &hstrl($c->{'description'});
     my $outf = $d->{'outf'};
