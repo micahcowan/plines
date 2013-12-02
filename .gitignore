@@ -1,3 +1,12 @@
 *.o
 *.hi
+Makefile.in
+Makefile
+/aclocal.m4
+/autom4te.cache/
+/config.*
+/configure
+/install-sh
+/missing
 /src/OptBuiltins.hs
+/src/plines
