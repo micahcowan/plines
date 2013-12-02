@@ -19,12 +19,20 @@ data OptAction =
     | ShowAction [String]
 
 data OptBuiltin = OptBuiltin {
-        shortOpts :: String
-      , longOpts  :: [String]
-      , action    :: String -> OptAction
-      , tag       :: String
-      , desc      :: [String]
+        shortOpts   :: String
+      , longOpts    :: [String]
+      , argument    :: ArgDesc
+      , action      :: String -> OptAction
+      , tag         :: String
+      , description :: [String]
     }
+
+shortOptions = concatMap (entries shortOpts) builtinOptions
+longOptions  = concatMap (entries longOpts) builtinOptions
+
+entries acc opt = map (flip (,) (arg, act)) $ acc opt
+    where arg = argument opt
+          act = action opt
 
 -- End of preamble. Everything below gets parsed into option structures.
 

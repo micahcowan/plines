@@ -246,6 +246,7 @@ sub finish_opt {
     }
     my $shopts = $c->{'shopts'};
     my $lopts = &hstrl($c->{'lopts'});
+    my $arg = $c->{'arg'} ? 'TakesArg' : 'TakesNoArg';
     my $act = '(' . $c->{'act'} . ')';
     my $tag = &hstring($c->{'tag'});
     my $description = &hstrl($c->{'description'});
@@ -254,6 +255,7 @@ sub finish_opt {
 ${px}OptBuiltin
         "@{$shopts}"
 $lopts
+        $arg
         $act
         $tag
 $description
