@@ -1,0 +1,57 @@
+-- This file is used to generate the OptBuiltins.hs file.
+
+-- The following preamble is copied as-is.
+
+module OptBuiltins where
+
+import OptParse
+
+data OptAction =
+    DefaultAction
+    | HelpAction
+    | VersionAction
+    | EvalAction String
+    | ReadDefsAction String
+    | ReadOptsAction String
+        -- The next two are processed AFTER options are done,
+        -- so they're lists for queueing the args
+    | ExpandAction [String]
+    | ShowAction [String]
+
+data OptBuiltin = OptBuiltin {
+        shortOpts :: String
+      , longOpts  :: [String]
+      , action    :: OptAction
+      , tag       :: String
+      , desc      :: [String]
+    }
+
+-- End of preamble. Everything below gets parsed into option structures.
+
+---
+
+    -h, --help
+        Print this help text and exit.
+
+    -V, --version
+        Print version and exit.
+
+    --eval EXPR
+        Evaluate EXPR
+
+    --read-defs FILE
+        Read plines definitions from the specified file.
+        If FILE refers to a directory, then all files in that directory
+        are read.
+
+    --read-opts FILE
+        Read option definitions from the specified file.
+        If FILE refers to a directory, then all files in that directory
+        are read.
+
+    --expand NAME
+        Expand the requested pline or chain, and then exit.
+
+    --show NAME
+        Give the detailed composition of the requested pline or chain,
+        and then exit.
