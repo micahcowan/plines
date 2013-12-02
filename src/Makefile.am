@@ -3,9 +3,9 @@
 
 bin_PROGRAMS = plines
 plines_SOURCES = PlinesMain.hs OptParse.hs OptBuiltins.hs
-EXTRA_SCRIPTS = procopts.pl
-BUILT_SOURCES = OptBuiltins.hs
-EXTRA_SOURCES = options.txt
+dist_noinst_SCRIPTS  = procopts.pl
+BUILT_SOURCES  = OptBuiltins.hs
+dist_noinst_DATA = options.txt
 
 HC = ghc
 LINK = $(HC) -o $@
