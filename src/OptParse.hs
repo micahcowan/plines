@@ -13,7 +13,7 @@ module OptParse
         takesArg,
         OptTable,       -- useful?
         OptParseCtx,    -- but not constructors
-        newOptsParseCtx,
+        newOptParseCtx,
         shortOptTable,
         longOptTable,
         getNextOpt,
@@ -54,8 +54,8 @@ data OptParseCtx a =
     }
 
 -- public OptPraseCtx creator
-newOptsParseCtx :: [String] -> OptParseCtx a
-newOptsParseCtx args =
+newOptParseCtx :: [String] -> OptParseCtx a
+newOptParseCtx args =
     OptParseCtx {
         shortOptTable = [],
         longOptTable  = [],
@@ -90,9 +90,43 @@ getNextOpt ctx@(OptParseCtx { partialShort = partial@(opt:opts) })
     ctxNextOpt = ctx { partialShort = opts }
     foundOpt = lookup opt (shortOptTable ctx)
 
+-- Handle no args remaining
+getNextOpt ctx@(OptParseCtx { remainArgs = [] })
+    = (
+        ctx { mixedArgs = [] },
+        RemainingArgs . reverse $ mixedArgs ctx
+      )
+
 -- Terminate when "--" arg reached
 getNextOpt ctx@(OptParseCtx { remainArgs = ("--":args) })
     = (
         ctx { mixedArgs = [], remainArgs = [] },
-        RemainingArgs $ mixedArgs ctx ++ remainArgs ctx
+        RemainingArgs $ reverse (mixedArgs ctx) ++ args
       )
+
+-- Handle long options
+getNextOpt ctx@(OptParseCtx { remainArgs = ('-':'-':opt):args })
+    = case foundOpt of
+        Nothing                     -> (ctxNextArg, UnknownLongOpt opt)
+        Just (TakesNoArg, payload)  ->
+            (ctxNextArg, LongOptNoArg opt payload)
+        Just (TakesArg, payload)    ->
+            case args of
+                (next:trail) ->
+                    (
+                        ctx { remainArgs = trail },
+                        LongOptArg opt next payload
+                    )
+                _ ->
+                    (ctxNextArg, LongOptMissingArg opt)
+  where
+    ctxNextArg = ctx { remainArgs = args }
+    foundOpt   = lookup opt (longOptTable ctx)
+
+-- Handle short options
+getNextOpt ctx@(OptParseCtx { remainArgs = ('-':opts):args })
+    = getNextOpt ctx { remainArgs = args, partialShort = opts }
+
+-- Handle args (possibly) mixed in with options
+getNextOpt ctx@(OptParseCtx { remainArgs = arg:args })
+    = getNextOpt ctx { remainArgs = args, mixedArgs = arg : mixedArgs ctx }

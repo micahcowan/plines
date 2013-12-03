@@ -17,6 +17,7 @@ data OptAction =
         -- so they're lists for queueing the args
     | ExpandAction [String]
     | ShowAction [String]
+    deriving (Show)
 
 data OptBuiltin = OptBuiltin {
         shortOpts   :: String
