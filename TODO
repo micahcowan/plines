@@ -1,0 +1,5 @@
+- Handle option errors
+- Generate usage
+- Generate version
+- Parser for plines def file
+- 
