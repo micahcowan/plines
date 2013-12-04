@@ -64,10 +64,10 @@ entries acc opt = map (flip (,) (arg, act)) $ acc opt
         are read.
 
     --expand NAME
-        :ExpandAction . (: [])
+        :ExpandAction . return
         Expand the requested pline or chain, and then exit.
 
     --show NAME
-        :ShowAction . (: [])
+        :ShowAction . return
         Give the detailed composition of the requested pline or chain,
         and then exit.
